@@ -11,9 +11,9 @@ class data(object):
     def __init__(self, dataset=None, xtekct=None, debug=None, **kwargs):
         self.debug = debug
         if dataset is not None:
-            self.dataset = sorted([os.path.join(dataset, i) for i in glob.glob("*." + ext)])
+            self.dataset = sorted([os.path.join(data, f) for f in os.listdir(data) if f.endswith('.tif')])
         else:
-            self.dataset = sorted(glob.glob("*.tif"))
+            self.dataset = sorted(glob.glob(".tif"))
         if xtekct is not None:
             self.config = axitom.config_from_xtekct(xtekct)
         else:

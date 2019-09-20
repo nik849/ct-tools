@@ -8,11 +8,11 @@ from skimage.io import imsave
 from skimage import exposure
 
 
-def load_img_seq(data=None, ext="tif"):
+def load_img_seq(data=None):
     if data is not None:
-        imfiles = sorted([os.path.join(data, i) for i in glob.glob("*." + ext)])
+        imfiles = sorted([os.path.join(data, f) for f in os.listdir(data) if f.endswith('.tif')])
     else:
-        imfiles = sorted(glob.glob("*." + ext))
+        imfiles = sorted(glob.glob("*.tif"))
 
     im = Image.open(imfiles[0])
     imgs = np.zeros((len(imfiles),im.size[1],im.size[0]))
