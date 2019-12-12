@@ -42,14 +42,14 @@ class Config(object):
         self.pixel_size_u = self.detector_size_u / self.n_pixels_u
         self.pixel_size_v = self.detector_size_v / self.n_pixels_v
 
-        self.object_xs = (np.arange(self.n_voxels_x, dtype=np.float64) - self.n_voxels_x / 2.) * self.voxel_size_x
-        self.object_ys = (np.arange(self.n_voxels_y, dtype=np.float64) - self.n_voxels_y / 2.) * self.voxel_size_y
-        self.object_zs = (np.arange(self.n_voxels_z, dtype=np.float64) - self.n_voxels_z / 2.) * self.voxel_size_z
+        self.object_xs = (np.arange(self.n_voxels_x, dtype=np.float32) - self.n_voxels_x / 2.) * self.voxel_size_x
+        self.object_ys = (np.arange(self.n_voxels_y, dtype=np.float32) - self.n_voxels_y / 2.) * self.voxel_size_y
+        self.object_zs = (np.arange(self.n_voxels_z, dtype=np.float32) - self.n_voxels_z / 2.) * self.voxel_size_z
 
         self.detector_us = (np.arange(self.n_pixels_u,
-                                      dtype=np.float64) - self.n_pixels_u / 2.) * self.pixel_size_u + self.pixel_offset_u * self.pixel_size_u
+                                      dtype=np.float32) - self.n_pixels_u / 2.) * self.pixel_size_u + self.pixel_offset_u * self.pixel_size_u
         self.detector_vs = (np.arange(self.n_pixels_v,
-                                      dtype=np.float64) - self.n_pixels_v / 2.) * self.pixel_size_v + self.pixel_offset_v * self.pixel_size_v
+                                      dtype=np.float32) - self.n_pixels_v / 2.) * self.pixel_size_v + self.pixel_offset_v * self.pixel_size_v
 
     def update(self):
         self.projection_angs = np.arange(0., 360, self.angular_inc)
@@ -62,14 +62,14 @@ class Config(object):
         self.pixel_size_u = self.detector_size_u / self.n_pixels_u
         self.pixel_size_v = self.detector_size_v / self.n_pixels_v
 
-        self.object_xs = (np.arange(self.n_voxels_x, dtype=np.float64) - self.n_voxels_x / 2.) * self.voxel_size_x
-        self.object_ys = (np.arange(self.n_voxels_y, dtype=np.float64) - self.n_voxels_y / 2.) * self.voxel_size_y
-        self.object_zs = (np.arange(self.n_voxels_z, dtype=np.float64) - self.n_voxels_z / 2.) * self.voxel_size_z
+        self.object_xs = (np.arange(self.n_voxels_x, dtype=np.float32) - self.n_voxels_x / 2.) * self.voxel_size_x
+        self.object_ys = (np.arange(self.n_voxels_y, dtype=np.float32) - self.n_voxels_y / 2.) * self.voxel_size_y
+        self.object_zs = (np.arange(self.n_voxels_z, dtype=np.float32) - self.n_voxels_z / 2.) * self.voxel_size_z
 
         self.detector_us = (np.arange(self.n_pixels_u,
-                                      dtype=np.float64) - self.n_pixels_u / 2.) * self.pixel_size_u + self.pixel_offset_u * self.pixel_size_u
+                                      dtype=np.float32) - self.n_pixels_u / 2.) * self.pixel_size_u + self.pixel_offset_u * self.pixel_size_u
         self.detector_vs = (np.arange(self.n_pixels_v,
-                                      dtype=np.float64) - self.n_pixels_v / 2.) * self.pixel_size_v + self.pixel_offset_v * self.pixel_size_v
+                                      dtype=np.float32) - self.n_pixels_v / 2.) * self.pixel_size_v + self.pixel_offset_v * self.pixel_size_v
 
 
 def config_from_xtekct(file_path):
