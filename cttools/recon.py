@@ -93,7 +93,8 @@ def _fdk_slice(projection, angle, config):
         #projection = projection[0] + ratio
         radius = proj_width / 2.
         x = np.arange(proj_width) - radius
-        x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
+        #x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
+        x_r, y_r = np.mgrid[config.object_xs, config.object_ys] - radius
         #x_r = x_r = config.center_of_rot_y
 
         det_a = config.source_to_detector_dist * ((-config.object_xs * np.sin(angle)) + (config.object_ys * np.cos(angle))) / (config.source_to_detector_dist + (config.object_xs * np.cos(angle)) + (config.object_ys * np.sin(angle)))
