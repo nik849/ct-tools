@@ -96,14 +96,14 @@ def _fdk_slice(projection, angle, config):
         x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
         #x_r = x_r = config.center_of_rot_y
 
-        det_a = config.source_to_detector_dist * ((-x_r * np.sin(angle)) + (y_r * np.cos(angle))) / (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle)))
+        det_a = config.source_to_detector_dist * ((-config.object_xs * np.sin(angle)) + (config.object_ys * np.cos(angle))) / (config.source_to_detector_dist + (config.object_xs * np.cos(angle)) + (config.object_ys * np.sin(angle)))
         #det_b = z * (config.source_to_detector_dist * (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle))))
         for col in projection[0].T:
             #t = y_r * np.cos(angle) - x_r * np.sin(angle)
             #interpolant = map_coordinates(projection[0], [det_a], cval=0., order=1, prefilter=False)
             interpolant = partial(np.interp, xp=x, fp=col, left=0, right=0)
             #interpolant = interp2d()
-            recon = recon + U * interpolant(det_a)
+            recon = recon + interpolant(det_a)
         return recon
 
 
