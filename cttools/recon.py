@@ -65,7 +65,7 @@ def fdk_slice_threaded(projections, config, initial_angle=0, **kwargs):
     ray.init()
     proj_width = projections[0][0].shape[0]
     proj_height = projections[0][0].shape[1]
-    recon = np.zeros((proj_width, proj_height), dtype=np.float64)
+    recon = np.zeros((proj_width, proj_height), dtype=np.float32)
     angles = np.linspace(0, (2 * np.pi), len(projections)) + np.deg2rad(initial_angle)
     print(f'Angles: {angles}')
     #proj_mem = ray.put(projections[0])
@@ -81,31 +81,32 @@ def fdk_slice_threaded(projections, config, initial_angle=0, **kwargs):
 @ray.remote
 def _fdk_slice(projection, angle, config):
 
-        x_proj = projection[0].T[0, :]
-        y_proj = projection[0].T[:, 0]
-        z = 0
-        proj_width = projection[0].shape[0]
-        proj_height = projection[0].shape[1]
-        recon = np.zeros((len(x_proj), len(y_proj)), dtype=np.float64)
-        y_proj = y_proj + config.center_of_rot_y
-        U = (config.source_to_detector_dist + (x_proj * np.cos(angle)) + (y_proj * np.sin(angle)))
-        ratio = (config.source_to_detector_dist ** 2) // (U ** 2)
-        #projection = projection[0] + ratio
-        radius = proj_width / 2.
-        x = np.arange(proj_width) - radius
-        #x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
-        x_r, y_r = np.mgrid[config.object_xs, config.object_ys] - radius
-        #x_r = x_r = config.center_of_rot_y
-
-        det_a = config.source_to_detector_dist * ((-config.object_xs * np.sin(angle)) + (config.object_ys * np.cos(angle))) / (config.source_to_detector_dist + (config.object_xs * np.cos(angle)) + (config.object_ys * np.sin(angle)))
-        #det_b = z * (config.source_to_detector_dist * (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle))))
-        for col in projection[0].T:
-            #t = y_r * np.cos(angle) - x_r * np.sin(angle)
-            #interpolant = map_coordinates(projection[0], [det_a], cval=0., order=1, prefilter=False)
-            interpolant = partial(np.interp, xp=x, fp=col, left=0, right=0)
-            #interpolant = interp2d()
-            recon = recon + interpolant(det_a)
-        return recon
+    x_proj = projection[0].T[0, :]
+    y_proj = projection[0].T[:, 0]
+    z = 0
+    proj_width = projection[0].shape[0]
+    proj_height = projection[0].shape[1]
+    recon = np.zeros((len(x_proj), len(y_proj)), dtype=np.float32)
+    #y_proj = y_proj + config.center_of_rot_y
+    U = (config.source_to_detector_dist + (x_proj * np.cos(angle)) + (y_proj * np.sin(angle)))
+    _U = (config.source_to_detector_dist + (config.object_xs * np.cos(angle)) + (config.object_ys * np.sin(angle)))
+    ratio = (config.source_to_detector_dist ** 2) / (_U ** 2)
+    radius = proj_width / 2.
+    #x_r = config.object_xs
+    #y_r = config.object_ys
+    x = np.arange(proj_width) - radius
+    x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
+    #x_r, y_r = np.meshgrid(config.object_xs, config.object_ys)# - radius
+    #x_r, y_r = np.mgrid[config.object_xs, config.object_ys] - radius
+    #x_r += config.center_of_rot_y
+    det_a = config.source_to_detector_dist * ((-x_r * np.sin(angle)) + (y_r * np.cos(angle))) / (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle)))
+    for col in projection[0].T:
+        t = y_r * np.cos(angle) - x_r * np.sin(angle)
+        #interpolant = map_coordinates(projection[0], det_a[:, np.newaxis], cval=0., order=1, prefilter=False)
+        interpolant = partial(np.interp, xp=x, fp=col, left=0, right=0)
+        #interpolant = interp2d(x_r, y_r, det_a)
+        recon = recon + interpolant(t)
+    return recon
 
 
 def fdk_vol(projections, config, **kwargs):

@@ -35,9 +35,9 @@ class Config(object):
         self.projection_angs = np.arange(0., 360, self.angular_inc)
         self.n_projections = len(self.projection_angs)
 
-        self.voxel_size_x = 0.02#1#self.object_size_x / self.n_voxels_x
-        self.voxel_size_y = 0.02#self.object_size_y / self.n_voxels_y
-        self.voxel_size_z = 0.02#self.object_size_z / self.n_voxels_z
+        self.voxel_size_x = self.object_size_x / self.n_voxels_x
+        self.voxel_size_y = self.object_size_y / self.n_voxels_y
+        self.voxel_size_z = self.object_size_z / self.n_voxels_z
 
         self.pixel_size_u = self.detector_size_u / self.n_pixels_u
         self.pixel_size_v = self.detector_size_v / self.n_pixels_v
