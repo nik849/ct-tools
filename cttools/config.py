@@ -24,16 +24,13 @@ class Config(object):
         self.detector_size_u = 400.
         self.detector_size_v = 400.
         self.source_to_detector_dist = 797.8693
-        self.source_to_object_dist = 95.1665735244751
+        self.source_to_object_dist = 219
         self.angular_inc = 1.
 
         self.pixel_offset_u = 0
         self.pixel_offset_v = 0
 
         self.center_of_rot_y = 0
-
-        self.projection_angs = np.arange(0., 360, self.angular_inc)
-        self.n_projections = len(self.projection_angs)
 
         self.voxel_size_x = self.object_size_x / self.n_voxels_x
         self.voxel_size_y = self.object_size_y / self.n_voxels_y

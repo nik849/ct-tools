@@ -26,7 +26,7 @@ def panel_coords(x, y, z, theta, config):
     return det_a, det_b
 
 
-def fdk_slice(projections, config, **kwargs):
+def fdk_slice(projections, config, slice, **kwargs):
 
     proj_width = projections[0][0].shape[0]
     proj_height = projections[0][0].shape[1]
@@ -35,29 +35,23 @@ def fdk_slice(projections, config, **kwargs):
 
     print(f'Angles: {angles}')
     for projection, angle in tqdm(zip(projections, angles), total=len(projections)):
-        x_proj = projection[0].T[:, 0]
-        y_proj = projection[0].T[0, :]
-        z = 0
-
-        y_proj += config.center_of_rot_y
-        U = (config.source_to_detector_dist + (x_proj * np.cos(angle)) + (y_proj * np.sin(angle)))
-        ratio = (config.source_to_detector_dist ** 2) // (U ** 2)
         radius = proj_width / 2.
         x = np.arange(proj_width) - radius
         x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
-        det_a = config.source_to_detector_dist * ((-x_r * np.sin(angle)) + (y_r * np.cos(angle))) // (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle)))
-        #det_b = z * (config.source_to_detector_dist * (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle))))
-        for col in projection[0].T:
-            interpolant = partial(np.interp, xp=x, fp=col, left=0, right=0)
-            recon = recon + interpolant(det_a)# * ratio
-            #recon_slice = recon_slice + ratio * interpolant(det_a)
+        x_r = x_r + config.center_of_rot_y
+        t = -x_r * np.cos(angle) + y_r * np.sin(angle)
+        if slice is not None:
+            interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(slice)], left=0, right=0)
+        else:
+            interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(proj_height / 2)], left=0, right=0)
+        recon = recon + interpolant(t)
+    return recon
+    #out = recon / np.float(len(projections))
+    #out.tofile('output.raw')
+    #return out
 
-    out = recon // np.float(len(projections))
-    out.tofile('output.raw')
-    return out
 
-
-def fdk_slice_threaded(projections, config, initial_angle=0, **kwargs):
+def fdk_slice_threaded(projections, config, slice, initial_angle=0, **kwargs):
 
     num_cpus = psutil.cpu_count(logical=False)
     #if len(projections) <= num_cpus:
@@ -71,15 +65,15 @@ def fdk_slice_threaded(projections, config, initial_angle=0, **kwargs):
     #proj_mem = ray.put(projections[0])
     temp = []
     for projection, angle in zip(projections, angles):
-        temp.append(_fdk_slice.remote(projection, angle, config))
+        temp.append(_fdk_slice.remote(projection, angle, config, slice=None))
     for slice in tqdm(temp, total=len(temp)):
         recon += ray.get(slice)
     ray.shutdown()
-    return recon // np.float(len(projections))
+    return recon #/ np.float(len(projections))
 
 
 @ray.remote
-def _fdk_slice(projection, angle, config):
+def _fdk_slice(projection, angle, config, slice):
 
     x_proj = projection[0].T[0, :]
     y_proj = projection[0].T[:, 0]
@@ -87,25 +81,16 @@ def _fdk_slice(projection, angle, config):
     proj_width = projection[0].shape[0]
     proj_height = projection[0].shape[1]
     recon = np.zeros((len(x_proj), len(y_proj)), dtype=np.float32)
-    #y_proj = y_proj + config.center_of_rot_y
-    U = (config.source_to_detector_dist + (x_proj * np.cos(angle)) + (y_proj * np.sin(angle)))
-    _U = (config.source_to_detector_dist + (config.object_xs * np.cos(angle)) + (config.object_ys * np.sin(angle)))
-    ratio = (config.source_to_detector_dist ** 2) / (_U ** 2)
     radius = proj_width / 2.
-    #x_r = config.object_xs
-    #y_r = config.object_ys
     x = np.arange(proj_width) - radius
+    projection[0][0] += config.center_of_rot_y
     x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
-    #x_r, y_r = np.meshgrid(config.object_xs, config.object_ys)# - radius
-    #x_r, y_r = np.mgrid[config.object_xs, config.object_ys] - radius
-    #x_r += config.center_of_rot_y
-    det_a = config.source_to_detector_dist * ((-x_r * np.sin(angle)) + (y_r * np.cos(angle))) / (config.source_to_detector_dist + (x_r * np.cos(angle)) + (y_r * np.sin(angle)))
-    for col in projection[0].T:
-        t = y_r * np.cos(angle) - x_r * np.sin(angle)
-        #interpolant = map_coordinates(projection[0], det_a[:, np.newaxis], cval=0., order=1, prefilter=False)
-        interpolant = partial(np.interp, xp=x, fp=col, left=0, right=0)
-        #interpolant = interp2d(x_r, y_r, det_a)
-        recon = recon + interpolant(t)
+    t = x_r * np.cos(angle) - y_r * np.sin(angle)
+    if slice is not None:
+        interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(slice)], left=0, right=0)
+    else:
+        interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(proj_height / 2)], left=0, right=0)
+    recon = recon + interpolant(t)
     return recon
 
 
@@ -125,7 +110,8 @@ def fdk_vol(projections, config, **kwargs):
         U = (config.source_to_detector_dist + (x_proj * np.cos(angle)) + (y_proj * np.sin(angle)))
         ratio = (config.source_to_detector_dist ** 2) // (U ** 2)
 
-        x_r, y_r, z_r = np.meshgrid(config.object_xs, config.object_ys, config.object_zs, sparse=True)
+        #x_r, y_r, z_r = np.meshgrid(config.object_xs, config.object_ys, config.object_zs, sparse=True)
+        x_r, y_r, z_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y, :config.n_voxels_z] - radius
         #x_r = np.array(config.object_xs)#x_r, y_r, z_r = np.meshgrid(config.object_xs, config.object_ys, config.object_zs, sparse=True)
         #y_r = np.array(config.object_ys)
         #z_r = np.array(config.object_zs)
@@ -177,7 +163,7 @@ def filter_projections(param, projections):
     return filtered_stack
 
 
-def recon(projections, param, single_slice=True, **kwargs):
+def recon(projections, param, single_slice=True, slice=None, single_threaded=False, **kwargs):
     filtered_stack = []
     pool = Pool()
     print('Filtering Projections...')
@@ -189,7 +175,10 @@ def recon(projections, param, single_slice=True, **kwargs):
     #    filtered_stack.append(filter_projections(proj))
     print(f'Filtered {len(filtered_stack)} Projections.')
     if single_slice:
-        return fdk_slice_threaded(filtered_stack, param, initial_angle=0)
+        if single_threaded:
+            return fdk_slice(filtered_stack, param, slice)
+        else:
+            return fdk_slice_threaded(filtered_stack, param, slice)
     else:
         return fdk_vol(filtered_stack, param)
     #return filtered_stack
