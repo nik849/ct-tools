@@ -19,4 +19,5 @@ config = tom.config_from_xtekct('20190403_HMX_2238_MF_thick_fast_mo_01.xtekct')
 #config = tom.config_from_xtekct('20190212_HMX_2178_ES_overview.xtekct')
 #config = tom.config_from_xtekct('20191114_HUTCH_2318_CH_02_IN23_2-4-24_06um.xtekct')
 
-out = tom.recon(p, config, single_threaded=True, slice=1250);imshow(out, cmap='Greys');show()
+#out = tom.recon(p, config, single_threaded=True, slice=1250);imshow(out, cmap='Greys');show()
+out = tom.recon(p, config, single_slice=False)

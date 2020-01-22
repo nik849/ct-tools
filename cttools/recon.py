@@ -27,7 +27,7 @@ def panel_coords(x, y, z, theta, config):
 
 
 @ray.remote
-def fdk_slice(projections, config, slice, **kwargs):
+def fdk_slice(projections, config, slice):
 
     proj_width = projections[0][0].shape[0]
     proj_height = projections[0][0].shape[1]
@@ -75,6 +75,7 @@ def _fdk_slice(projection, angle, config, slice):
 
 
 def fdk_vol(projections, config, **kwargs):
+    output_file = 'output.raw'
     with open(output_file, 'wb') as f:
         ray.init()
         temp = []
@@ -109,7 +110,7 @@ def filter_projections(param, projections):
     return filtered_stack
 
 
-def recon(projections, param, single_slice=True, slice=None, **kwargs):
+def recon(projections, param, single_slice=True, slice=None):
     filtered_stack = []
     pool = Pool()
     print('Filtering Projections...')
