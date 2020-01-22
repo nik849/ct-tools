@@ -5,10 +5,6 @@ from .parse import parse_xtekct_file
 class Config(object):
 
     def __init__(self):
-        """ Configuration object which contains all settings neccessary for the forward projection
-            and tomographic reconstruction using the axitom algorithm.
-
-        """
 
         self.n_voxels_x = 2000
         self.n_voxels_y = 2000
