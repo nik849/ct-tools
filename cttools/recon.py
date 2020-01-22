@@ -79,8 +79,8 @@ def fdk_vol(projections, config, **kwargs):
     with open(output_file, 'wb') as f:
         ray.init()
         temp = []
-        num_imgs = config.n_voxels_z
-        for imgs in list(range(len(num_imgs))):
+        num_imgs = int(config.n_voxels_z)
+        for imgs in list(range(num_imgs)):
             temp.append(fdk_slice.remote(projections, config, slice=img))
         for slice in tqdm(temp, total=len(temp)):
             f.write(ray.get(slice))
