@@ -180,7 +180,7 @@ def read_image(file_path, flat_corrected=False):
             The single channel image with float64 values
 
         """
-    image = imread(file_path).astype(np.float64)
+    image = imread(file_path).astype(np.float32)
     if image.ndim == 3:
         image = np.average(image, axis=2)
     if flat_corrected:
