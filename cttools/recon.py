@@ -50,7 +50,7 @@ def fdk_slice(projections, config, slice):
     #out.tofile('output.raw')
     #return out
 
-
+@ray.remote
 def _fdk_slice(projections, config, slice):
 
     test_projection = imread(projections[0]).astype(np.float32)
