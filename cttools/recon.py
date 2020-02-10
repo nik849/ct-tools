@@ -83,7 +83,7 @@ def fdk_vol(projections, config, **kwargs):
     output_file = 'output.raw'
     #with open(output_file, 'wb') as f:
     #pool = Pool()
-        #ray.init()
+    ray.init()
         #
     # temp = []
     #func = partial(_fdk_slice, projections, config)
