@@ -63,7 +63,7 @@ def _fdk_slice(projections, config, slice):
 
         proj = imread(projection).astype(np.float32)
         proj = -np.log(proj)
-        projection_filtered = np.squeeze(ramp_filter_and_weight(proj[:, :, np.newaxis], param), 2)
+        projection_filtered = np.squeeze(ramp_filter_and_weight(proj[:, :, np.newaxis], config), 2)
 
         radius = proj_width / 2.
         x = np.arange(proj_width) - radius
