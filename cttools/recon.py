@@ -82,18 +82,24 @@ def _fdk_slice(projections, config, slice):
 def fdk_vol(projections, config, **kwargs):
     output_file = 'output.raw'
     #with open(output_file, 'wb') as f:
-    pool = Pool()
+    #pool = Pool()
         #ray.init()
         #
     # temp = []
-    func = partial(_fdk_slice, projections, config)
+    #func = partial(_fdk_slice, projections, config)
     #num_imgs = list(range(int(config.n_voxels_z)))
-    num_imgs = list(range(int(100)))
-    print(f'Processing {num_imgs} slices ...')
+    num_imgs = list(range(int(10)))
+    print(f'Processing {len(num_imgs)} slices ...')
+    #with open(output_file, 'wb') as f:
+    #    for res in pool.map(func, num_imgs):
+    #        f.write(res)
+    temp = []
+    for slice in num_imgs:
+        temp.append(_fdk_slice.remote(projections, config, slice))
     with open(output_file, 'wb') as f:
-        for res in pool.map(func, num_imgs):
-            f.write(res)
-
+        for slice in temp:
+            f.write(ray.get(slice))
+    ray.shutdown()
     #with open(output_file, 'wb') as f:
     #    print(f'Writing out ...')
     #    for slice in tqdm(num_imgs, total=len(num_imgs)):
