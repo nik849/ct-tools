@@ -72,9 +72,9 @@ def _fdk_slice(projections, config, slice):
         t = x_r * np.cos(angle) - y_r * np.sin(angle)
 
         if slice is not None:
-            interpolant = partial(np.interp, xp=x, fp=projection_filtered[0][:, int(slice)], left=0, right=0)
+            interpolant = partial(np.interp, xp=x, fp=projection_filtered[:, int(slice)], left=0, right=0)
         else:
-            interpolant = partial(np.interp, xp=x, fp=projection_filtered[0][:, int(proj_height / 2)], left=0, right=0)
+            interpolant = partial(np.interp, xp=x, fp=projection_filtered[:, int(proj_height / 2)], left=0, right=0)
         recon = recon + interpolant(t)
     return recon / np.float(len(projections))
 
