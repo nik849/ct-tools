@@ -124,7 +124,7 @@ def filter_projections(param, projections):
     return filtered_stack
 
 
-def recon(path, param, single_slice=False, slice=None):
+def recon(projections, param, single_slice=False, slice=None):
     # filtered_stack = []
     # pool = Pool()
     # print('Filtering Projections...')
@@ -137,7 +137,7 @@ def recon(path, param, single_slice=False, slice=None):
     # print(f'Filtered {len(filtered_stack)} Projections.')
 
     # projections now should come from os.listdir()
-    projections = os.listdir(path)
+    #projections = os.listdir(path)
     if single_slice:
         return fdk_slice(projections, param, slice)
     else:
