@@ -51,6 +51,34 @@ def fdk_slice(projections, config, slice):
     #return out
 
 
+def _fdk_slice(projections, config, slice):
+
+    test_projection = imread(projections[0]).astype(np.float32)
+    proj_width = test_projection.shape[0]
+    proj_height = test_projection.shape[1]
+    recon = np.zeros((proj_width, proj_height), dtype=np.float32)
+    angles = np.linspace(0, (2 * np.pi), len(projections))
+
+    for projection, angle in zip(projections, angles):
+
+        proj = imread(projection).astype(np.float32)
+        proj = -np.log(proj)
+        projection_filtered = np.squeeze(ramp_filter_and_weight(proj[:, :, np.newaxis], param), 2)
+
+        radius = proj_width / 2.
+        x = np.arange(proj_width) - radius
+        x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
+        x_r = x_r + config.center_of_rot_y
+        t = x_r * np.cos(angle) - y_r * np.sin(angle)
+
+        if slice is not None:
+            interpolant = partial(np.interp, xp=x, fp=projection_filtered[0][:, int(slice)], left=0, right=0)
+        else:
+            interpolant = partial(np.interp, xp=x, fp=projection_filtered[0][:, int(proj_height / 2)], left=0, right=0)
+        recon = recon + interpolant(t)
+    return recon / np.float(len(projections))
+
+
 def fdk_vol(projections, config, **kwargs):
     output_file = 'output.raw'
     #with open(output_file, 'wb') as f:
@@ -69,7 +97,7 @@ def fdk_vol(projections, config, **kwargs):
     with open(output_file, 'wb') as f:
         print(f'Writing out ...')
         for slice in tqdm(num_imgs, total=len(num_imgs)):
-            f.write(fdk_slice(projections, config, slice))
+            f.write(_fdk_slice(projections, config, slice))
             #f.write(slice)
 
 
@@ -96,19 +124,22 @@ def filter_projections(param, projections):
     return filtered_stack
 
 
-def recon(projections, param, single_slice=False, slice=None):
-    filtered_stack = []
-    pool = Pool()
-    print('Filtering Projections...')
-    func = partial(filter_projections, param)
-    for proj in pool.imap(func, projections):
-        filtered_stack.append(proj)#list(tqdm(pool.apply_async(filter_projections(projections, param), projections), total=len(projections)))
-    pool.close()
-    #for proj in projections:
-    #    filtered_stack.append(filter_projections(proj))
-    print(f'Filtered {len(filtered_stack)} Projections.')
-    if single_slice:
-        return fdk_slice(filtered_stack, param, slice)
-    else:
-        return fdk_vol(filtered_stack, param)
+def recon(path, param, single_slice=False, slice=None):
+    # filtered_stack = []
+    # pool = Pool()
+    # print('Filtering Projections...')
+    # func = partial(filter_projections, param)
+    # for proj in pool.imap(func, projections):
+    #     filtered_stack.append(proj)#list(tqdm(pool.apply_async(filter_projections(projections, param), projections), total=len(projections)))
+    # pool.close()
+    # #for proj in projections:
+    # #    filtered_stack.append(filter_projections(proj))
+    # print(f'Filtered {len(filtered_stack)} Projections.')
+
+    # projections now should come from os.listdir()
+    projections = os.listdir(path)
+     if single_slice:
+         return fdk_slice(projections, param, slice)
+     else:
+         return fdk_vol(projections, param)
     #return filtered_stack
