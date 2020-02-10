@@ -138,8 +138,8 @@ def recon(path, param, single_slice=False, slice=None):
 
     # projections now should come from os.listdir()
     projections = os.listdir(path)
-     if single_slice:
-         return fdk_slice(projections, param, slice)
-     else:
-         return fdk_vol(projections, param)
+    if single_slice:
+        return fdk_slice(projections, param, slice)
+    else:
+        return fdk_vol(projections, param)
     #return filtered_stack
