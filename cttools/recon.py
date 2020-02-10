@@ -26,7 +26,6 @@ def panel_coords(x, y, z, theta, config):
     return det_a, det_b
 
 
-@ray.remote
 def fdk_slice(projections, config, slice):
 
     proj_width = projections[0][0].shape[0]
@@ -34,19 +33,19 @@ def fdk_slice(projections, config, slice):
     recon = np.zeros((proj_width, proj_height), dtype=np.float32)
     angles = np.linspace(0, (2 * np.pi), len(projections))
 
-    print(f'Angles: {angles}')
-    for projection, angle in tqdm(zip(projections, angles), total=len(projections)):
+    #print(f'Angles: {angles}')
+    for projection, angle in zip(projections, angles):
         radius = proj_width / 2.
         x = np.arange(proj_width) - radius
         x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
         x_r = x_r + config.center_of_rot_y
-        t = -x_r * np.cos(angle) + y_r * np.sin(angle)
+        t = x_r * np.cos(angle) - y_r * np.sin(angle)
         if slice is not None:
             interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(slice)], left=0, right=0)
         else:
             interpolant = partial(np.interp, xp=x, fp=projection[0][:, int(proj_height / 2)], left=0, right=0)
         recon = recon + interpolant(t)
-    return recon
+    return recon / np.float(len(projections))
     #out = recon / np.float(len(projections))
     #out.tofile('output.raw')
     #return out
@@ -54,18 +53,24 @@ def fdk_slice(projections, config, slice):
 
 def fdk_vol(projections, config, **kwargs):
     output_file = 'output.raw'
-    with open(output_file, 'wb') as f:
-        pool = Pool()
+    #with open(output_file, 'wb') as f:
+    # pool = Pool()
         #ray.init()
-        temp = []
-        func = partial(fdk_slice, projections, config)
-        num_imgs = list(range(int(config.n_voxels_z)))
-        print(f'Processing {config.n_voxels_z} slices ...')
-        for slice in pool.imap(func, slice=slice)
-            temp.append(slice)
+        #
+    # temp = []
+    # func = partial(fdk_slice, projections, config)
+        #num_imgs = list(range(int(config.n_voxels_z)))
+    num_imgs = list(range(int(100)))
+    # print(f'Processing {config.n_voxels_z} slices ...')
+    # with open(output_file, 'wb') as f:
+    #     for res in pool.map(func, num_imgs):
+    #         f.write(res)
+
+    with open(output_file, 'wb') as f:
         print(f'Writing out ...')
-        for slice in tqdm(sorted(temp), total=len(temp)):
-            f.write(slice)
+        for slice in tqdm(num_imgs, total=len(num_imgs)):
+            f.write(fdk_slice(projections, config, slice))
+            #f.write(slice)
 
 
 def read_projections(path, into_ram=True, flat_corrected=True, n_proj=3142):
@@ -91,7 +96,7 @@ def filter_projections(param, projections):
     return filtered_stack
 
 
-def recon(projections, param, single_slice=True, slice=None):
+def recon(projections, param, single_slice=False, slice=None):
     filtered_stack = []
     pool = Pool()
     print('Filtering Projections...')
