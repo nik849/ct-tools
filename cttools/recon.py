@@ -82,22 +82,22 @@ def _fdk_slice(projections, config, slice):
 def fdk_vol(projections, config, **kwargs):
     output_file = 'output.raw'
     #with open(output_file, 'wb') as f:
-    # pool = Pool()
+    pool = Pool()
         #ray.init()
         #
     # temp = []
-    # func = partial(fdk_slice, projections, config)
-        #num_imgs = list(range(int(config.n_voxels_z)))
+    func = partial(_fdk_slice, projections, config)
+    #num_imgs = list(range(int(config.n_voxels_z)))
     num_imgs = list(range(int(100)))
-    # print(f'Processing {config.n_voxels_z} slices ...')
-    # with open(output_file, 'wb') as f:
-    #     for res in pool.map(func, num_imgs):
-    #         f.write(res)
-
+    print(f'Processing {num_imgs} slices ...')
     with open(output_file, 'wb') as f:
-        print(f'Writing out ...')
-        for slice in tqdm(num_imgs, total=len(num_imgs)):
-            f.write(_fdk_slice(projections, config, slice))
+        for res in pool.map(func, num_imgs):
+            f.write(res)
+
+    #with open(output_file, 'wb') as f:
+    #    print(f'Writing out ...')
+    #    for slice in tqdm(num_imgs, total=len(num_imgs)):
+    #        f.write(_fdk_slice(projections, config, slice))
             #f.write(slice)
 
 
@@ -128,7 +128,7 @@ def recon(projections, param, single_slice=False, slice=None):
     # filtered_stack = []
     # pool = Pool()
     # print('Filtering Projections...')
-    # func = partial(filter_projections, param)
+    #func = partial(filter_projections, param)
     # for proj in pool.imap(func, projections):
     #     filtered_stack.append(proj)#list(tqdm(pool.apply_async(filter_projections(projections, param), projections), total=len(projections)))
     # pool.close()
