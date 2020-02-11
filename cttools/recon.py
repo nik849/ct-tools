@@ -12,8 +12,6 @@ from tqdm import tqdm
 from multiprocessing import Pool
 from sys import getsizeof
 from scipy.fftpack import fft, ifft, fftshift
-import psutil
-import ray
 
 
 def panel_coords(x, y, z, theta, config):
@@ -61,7 +59,8 @@ def _fdk_slice(projections, config, slice):
 
     for projection, angle in zip(projections, angles):
 
-        proj = imread(projection).astype(np.float32)
+        proj = read_image(projection, flat_corrected=True)
+        #proj = imread(projection).astype(np.float32)
         proj = -np.log(proj)
         projection_filtered = np.squeeze(ramp_filter_and_weight(proj[:, :, np.newaxis], config), 2)
 
@@ -88,8 +87,8 @@ def fdk_vol(projections, config, **kwargs):
     # temp = []
     func = partial(_fdk_slice, projections, config)
     #num_imgs = list(range(int(config.n_voxels_z)))
-    num_imgs = list(range(int(100)))
-    print(f'Processing {num_imgs} slices ...')
+    num_imgs = list(range(int(10)))
+    print(f'Processing {len(num_imgs)} slices ...')
     with open(output_file, 'wb') as f:
         for res in pool.map(func, num_imgs):
             f.write(res)
