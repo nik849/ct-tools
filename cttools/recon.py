@@ -68,7 +68,7 @@ def _fdk_slice(projections, config, slice):
         x = np.arange(proj_width) - radius
         x_r, y_r = np.mgrid[:config.n_voxels_x, :config.n_voxels_y] - radius
         x_r = x_r + config.center_of_rot_y
-        t = x_r * np.cos(angle) - y_r * np.sin(angle)
+        t = y_r * np.cos(angle) - x_r * np.sin(angle)
 
         if slice is not None:
             interpolant = partial(np.interp, xp=x, fp=projection_filtered[:, int(slice)], left=0, right=0)
